@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Project</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        .navbar { background: #333; padding: 10px; color: white; display: flex; justify-content: space-between; }
+        .nav-links { list-style: none; display: flex; }
+        .nav-links li { margin: 0 10px; }
+        .nav-links a { color: white; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <div>
+            <ul class="nav-links">
+                <li><a href="{% url 'home' %}">Home</a></li>
+                <li><a href="#">Shadowbox</a></li>
+                <li><a href="#">Pbalance</a></li>
+            </ul>
+        </div>
+        <div>
+            <ul class="nav-links">
+                {% if user.is_authenticated %}
+                    <li>
+                        <form id="logout-form" action="{% url 'logout' %}" method="post" style="display: none;">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'home' %}">
+                        </form>
+                        <a href="#" onclick="document.getElementById('logout-form').submit(); return false;">Logout</a>
+                    </li>
+                {% else %}
+                    <li><a href="{% url 'login' %}">Sign in</a></li>
+                    <li><a href="{% url 'register' %}">Register</a></li>
+                {% endif %}
+
+            </ul>
+        </div>
+    </div>
+
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+
+</body>
+</html>
