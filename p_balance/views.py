@@ -33,39 +33,44 @@ def generate_data():
 
 def get_filtered_data(request):
     df = generate_data()  # Load full dataset
-    print("Request GET:", request.GET)
+    #print("Request GET:", request.GET)
     selected_filters = request.GET.dict()  # .dict() converts QueryDict to a normal dict
-    print("Selected Filters:", selected_filters)
-
-    # 1. Extract Model Filters
+    
+    ## 1. Extract Model Filters
     selected_models = request.GET.getlist(columns_select["Model"] + '[]')
-    print(selected_models)
     if selected_models:
         df = df[df[columns_select["Model"]].isin(selected_models)]
 
-    # 2. Extract Checkbox Filters
+    ## 2. Extract Checkbox Filters
     selected_filters = {col: request.GET.getlist(col + '[]') for col in columns_select["Filter"]}
-    print(selected_filters)
     for col, values in selected_filters.items():
         if values:
             df = df[df[col].isin(values)]
 
     selected_color_filtered = {col: request.GET.getlist(col + '[]') for col in columns_select["Parameters"]}
     print(selected_color_filtered)
-    ## output: 
-    ## {'Con,r': ['pink', 'lightgreen'], 'CT,r': ['orange'], 'Top18-26': ['red', 'lightgreen'], 'sDA': ['pink'], 'ASE': ['lightgreen']}
-    # 3. Extract and Apply Color Filters
-    # for col, values in selected_color_filtered.items():
-    #     if values:
-    #         ranges = [(0, 2), (5, 7)], # definir os ranges en funcao das cores
-    #         mask = np.logical_or.reduce([(df[col] >= low) & (df[col] <= high) for low, high in ranges])
-    #         df = df[mask]
+    ## 3. Extract and Apply Color Filters
+    for col, values in selected_color_filtered.items():
+        if values:
+            limits = []
+            for value in values:
+                if columns_select["Parameters"][col][0]: # if True take the position of the color from red to darkgreen
+                    pos = color_classes.index(value)
+                else:                                    # if False take the position of the color from darkgreen to red
+                    pos = color_classes[::-1].index(value)
+                if pos == 0:
+                    # include the lower value also in the range. reducing 0.0001 of this value
+                    limit = [columns_select["Parameters"][col][1][pos]-0.0001,columns_select["Parameters"][col][1][pos+1]]
+                    limits.append(limit)
+                else:
+                    limit = [columns_select["Parameters"][col][1][pos],columns_select["Parameters"][col][1][pos+1]]
+                    limits.append(limit)
+            if limits:
+                # include the higher number but not the lower (for position 0, was reduce 0.0001 to the value to include the lowest value)
+                mask = np.logical_or.reduce([(df[col] > low) & (df[col] <= high) for low, high in limits])
+                df = df[mask]
     
-    
-    
-    
-    
-    # 4. Prepare Chart Data (No change here)
+    ## 4. Prepare Chart Data (No change here)
     traces = []
     for param, (direction, thresholds) in columns_select["Parameters"].items():
         colors = color_classes if direction else color_classes[::-1]
@@ -89,7 +94,7 @@ def get_filtered_data(request):
             name=row[columns_select["Model"]]
         ))
 
-    # 5. Update Legend
+    ## 5. Update Legend
     legend_x_start = 1  
     legend_y_start = 0.9
     legend_height = 0.1  
@@ -125,7 +130,7 @@ def get_filtered_data(request):
             yanchor="middle"
         ))
 
-    # 6. Update Plotly Layout
+    ## 6. Update Plotly Layout
     fig = go.Figure(data=traces)
     fig.update_layout(
         title="PBalance",
@@ -147,7 +152,6 @@ def get_filtered_data(request):
 
 def dashboard_view(request):
     df = generate_data()
-    print("***",json.dumps({col: sorted(df[col].unique()) for col in columns_select["Filter"]}))
     return render(request, 'p_balance/dashboard.html', {
         'filters': json.dumps({col: sorted(df[col].unique()) for col in columns_select["Filter"]}),
         'models': sorted(df[columns_select["Model"]].unique()),
