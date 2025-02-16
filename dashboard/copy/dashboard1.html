@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'dashboard/style.css' %}">
+
+<div class="container">
+    <!-- Left Section -->
+    <div class="left-section">
+        <h2>Information Section</h2>
+        <p>This section provides some background information and additional context for the dashboard.</p>
+        <img src="https://source.unsplash.com/random/400x300" alt="Random Image">
+    </div>
+
+    <!-- Right Section (Dashboard) -->
+    <div class="right-section">
+        <h1>Model Data Dashboard</h1>
+
+        <!-- Filters -->
+        <form id="filter-form" class="filters">
+            <!-- Model Filter -->
+            <div class="filter-group">
+                <label for="id_model_filter">Select Model:</label>
+                <select id="id_model_filter" name="id_model" multiple="multiple">
+                    {% for model in unique_models %}
+                        <option value="{{ model }}">{{ model }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        
+            <!-- Climatization Filter -->
+            <div class="filter-group">
+                <label>Select Climatization:</label>
+                <div id="climatization_filter">
+                    {% for climatization in unique_climatizations %}
+                        <input type="checkbox" class="filter-checkbox" name="climatization" value="{{ climatization }}"> {{ climatization }}<br>
+                    {% endfor %}
+                </div>
+            </div>
+        
+            <!-- Glass Type Filter -->
+            <div class="filter-group">
+                <label>Select Glass Type:</label>
+                <div id="Glass_type_filter">
+                    {% for glass_type in unique_glass_types %}
+                        <input type="checkbox" class="filter-checkbox" name="Glass_type" value="{{ glass_type }}"> {{ glass_type }}<br>
+                    {% endfor %}
+                </div>
+            </div>
+        
+            <!-- Shading Filter -->
+            <div class="filter-group">
+                <label>Select Shading:</label>
+                <div id="Shading_filter">
+                    {% for shading in unique_shadings %}
+                        <input type="checkbox" class="filter-checkbox" name="Shading" value="{{ shading }}"> {{ shading }}<br>
+                    {% endfor %}
+                </div>
+            </div>
+        </form>
+
+        <!-- Chart Container -->
+        <div id="plotly-chart"></div>
+
+        <!-- Table Container -->
+        <div id="data-table-container">
+            <h2>Model Data Table</h2>
+            <table id="data-table">
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Cons</th>
+                        <th>Conf_t</th>
+                        <th>Conf_v</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table rows will be inserted here dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Load Select2 and jQuery -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $("#id_model_filter").select2({
+            placeholder: "Select models",
+            allowClear: true,
+            width: '100%'  // Ensures dropdown behaves correctly
+        });
+
+        function updateGraphAndTable() {
+            var filters = {};
+
+            // Collect selected models
+            filters["id_model"] = $("#id_model_filter").val() || [];
+
+            // Collect other filter values
+            $(".filter-checkbox").each(function () {
+                var name = $(this).attr("name");
+                if (!(name in filters)) {
+                    filters[name] = [];
+                }
+                if ($(this).prop("checked")) {
+                    filters[name].push($(this).val());
+                }
+            });
+
+            $.ajax({
+                url: "{% url 'get_filtered_data' %}",
+                type: "GET",
+                data: filters,
+                dataType: "json",
+                success: function (response) {
+                    var graphData = JSON.parse(response.chart);
+                    Plotly.react('plotly-chart', graphData.data, graphData.layout);
+
+                    // Update Table
+                    var tableBody = $("#data-table tbody");
+                    tableBody.empty();  // Clear previous table rows
+
+                    response.table.forEach(function (row) {
+                        var tr = "<tr>";
+                        tr += "<td>" + row.id_model + "</td>";
+                        tr += "<td>" + row.Cons + "</td>";
+                        tr += "<td>" + row.Conf_t + "</td>";
+                        tr += "<td>" + row.Conf_v + "</td>";
+                        tr += "</tr>";
+                        tableBody.append(tr);
+                    });
+                },
+                error: function () {
+                    console.log("Error fetching data");
+                }
+            });
+        }
+
+        updateGraphAndTable();  // Load graph and table on page load
+
+        // Update graph and table when filters change
+        $("#id_model_filter").on("change", updateGraphAndTable);
+        $(".filter-checkbox").on("change", updateGraphAndTable);
+    });
+</script>
+
+
+{% endblock %}

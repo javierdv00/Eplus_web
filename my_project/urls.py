@@ -25,4 +25,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home_view, name='home'),  # Home view
     path('account/', include('account.urls')),  # Include account URLs
+    path('p_balance/', include('p_balance.urls')),
+    path('django_plotly_dash/', include('django_plotly_dash.urls')),  # Required for Dash
+    path('dashboard/', include('dashboard.urls')),
 ]
