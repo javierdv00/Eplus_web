@@ -5,34 +5,72 @@ import pandas as pd
 import numpy as np
 import json
 
+def dash_home_view(request):
+    return render(request, 'p_balance/dash_home.html')
+
 # Define column categories
-columns_select = {
-    "Model": "ID Modelo",
-    "Filter": ["Climatizacao", "Vidro", "Protecao Solar"],
-    "Parameters": {"Con,r":[True, [-0.1, 0, 0.02, 0.05, 0.1, 1]],
-                   "CT,r":[True, [-0.1, 0, 0.04, 0.1, 0.2, 1]],
-                   "Top18-26": [True, [0, 0.4, 0.5, 0.6, 0.7, 1]],
-                   "sDA":[True, [0, 0.2, 0.4, 0.55, 0.75, 1]],
-                   "ASE":[False, [0, 0.07, 0.1, 0.2, 0.3, 1]]}
-}
+
 color_classes = ["red", "pink", "orange", "lightgreen", "darkgreen"]
 
-def generate_data():
+def generate_data(model):
 
-    file_path = 'Resultados_Todos.xlsx'
-    df_model = pd.read_excel(file_path, sheet_name='BD_Modelo')
-    rename_dict = {"Protecao Solar - ID Modelo": "Protecao Solar",
-                   "Normalizado_Consumo total [kWh]": "Con,r",
-                   "Normalizado_Carga Termica Total_anual [W]": "CT,r",
-                   "Entre 18 e 26_ocup": "Top18-26"}
-    df = df_model.rename(columns=rename_dict)
-    
-    # Select only relevant columns
-    selected_columns = [columns_select["Model"]] + columns_select["Filter"] + list(columns_select["Parameters"].keys())
-    return df[selected_columns]
+    if model == "Building":
+        file_path = 'Resultados_Todos.xlsx'
+        df_model = pd.read_excel(file_path, sheet_name='BD_Modelo')
+        
+        rename_dict = {"Protecao Solar - ID Modelo": "Protecao Solar",
+                        "Normalizado_Consumo total [kWh]": "Con,r",
+                        "Normalizado_Consumo HVAC [kWh]": "Con HVAC,r",
+                        "Normalizado_Carga Termica Total_anual [W]": "CT,r-total",
+                        "Normalizado_Carga Termica Janela (Ganhos) [W]": "CT,jr-g",
+                        "Entre 18 e 26_ocup": "TO_18-26,ocup",
+                        "Entre 18 e 26_anual": "TO_18-26"}
+        df = df_model.rename(columns=rename_dict)
+        columns_select = {
+            "Model": "ID Modelo",
+            "Filter": ["Climatizacao", "Vidro", "Protecao Solar"],
+            "Parameters": {"Con,r":[True, [-0.1, 0, 0.02, 0.05, 0.1, 1]],
+                        "Con HVAC,r":[True, [-0.1, 0, 0.04, 0.1, 0.2, 1]],
+                        "CT,r-total":[True, [-0.1, 0, 0.04, 0.1, 0.2, 1]],
+                        "CT,jr-g":[True, [-0.1, 0, 0.1, 0.3, 0.5, 1]],
+                        "TO_18-26,ocup": [True, [0, 0.4, 0.5, 0.6, 0.7, 1]],
+                        "TO_18-26": [True, [0, 0.4, 0.5, 0.6, 0.7, 1]],
+                        "sDA":[True, [0, 0.2, 0.4, 0.55, 0.75, 1]],
+                        "ASE":[False, [0, 0.07, 0.1, 0.2, 0.3, 1]],
+                        "UDI_a":[True, [0, 0.2, 0.35, 0.5, 0.75, 1]],
+                        "UDI_e":[False, [0, 0.05, 0.1, 0.3, 0.5, 1]]}
+        }
+        # Select only relevant columns
+        selected_columns = [columns_select["Model"]] + columns_select["Filter"] + list(columns_select["Parameters"].keys())
+        return df[selected_columns], columns_select
 
-def get_filtered_data(request):
-    df = generate_data()  # Load full dataset
+    if model == "Ambientes":
+        file_path = 'Resultados_Todos.xlsx'
+        df_ambientes = pd.read_excel(file_path, sheet_name='BD_Ambientes')
+
+        rename_dict = {"Protecao Solar - ID Modelo": "Protecao Solar",
+                        "Normalizado_Consumo_Cooling [kWh]": "Con,r_resf",
+                        "Normalizado_Pico Carga_anual [kW]": "CT,r-total",
+                        "Normalizado_Zone Windows Gain [kW]": "CT,jr-g",
+                        " % [18<Top<26_ocup]": "TO_18-26,ocup"}
+        df = df_ambientes.rename(columns=rename_dict)
+        columns_select = {
+            "Model": "ID modelo-ambiente",
+            "Filter": ["Ambientes","Climatizacao", "Orientacao", "Vidro", "Protecao Solar"],
+            "Parameters": {"Con,r_resf":[True, [-0.1, 0, 0.04, 0.1, 0.2, 1]],
+                        "CT,r-total":[True, [-0.1, 0, 0.04, 0.1, 0.2, 1]],
+                        "CT,jr-g":[True, [-0.1, 0, 0.1, 0.3, 0.5, 1]],
+                        "TO_18-26,ocup": [True, [0, 0.4, 0.5, 0.6, 0.7, 1]],
+                        "sDA":[True, [0, 0.2, 0.4, 0.55, 0.75, 1]],
+                        "ASE":[False, [0, 0.07, 0.1, 0.2, 0.3, 1]],
+                        "sDG":[False, [0, 0.17, 0.34, 0.38, 0.45, 1]]}
+        }
+        # Select only relevant columns
+        selected_columns = [columns_select["Model"]] + columns_select["Filter"] + list(columns_select["Parameters"].keys())
+        return df[selected_columns], columns_select
+
+def get_filtered_data(request, dash_model):
+    df,columns_select = generate_data(dash_model)  # Load full dataset
     #print("Request GET:", request.GET)
     selected_filters = request.GET.dict()  # .dict() converts QueryDict to a normal dict
     
@@ -48,7 +86,6 @@ def get_filtered_data(request):
             df = df[df[col].isin(values)]
 
     selected_color_filtered = {col: request.GET.getlist(col + '[]') for col in columns_select["Parameters"]}
-    print(selected_color_filtered)
     ## 3. Extract and Apply Color Filters
     for col, values in selected_color_filtered.items():
         if values:
@@ -134,13 +171,14 @@ def get_filtered_data(request):
     fig = go.Figure(data=traces)
     fig.update_layout(
         title="PBalance",
-        width=1280,
+        ## adjustin the pixels from Figure to table in css (around 1.2 to 1.3 bigger in css)
+        width=1280 if len(columns_select["Parameters"])<8 else 300+(111*len(columns_select["Parameters"])+80),
         xaxis_title="Parameters",
         template="plotly_white",
         showlegend=False,
         barmode="overlay",
         shapes=shapes,
-        margin=dict(l=270, r=80),
+        margin=dict(l=300, r=80),
         annotations=annotations
     )
 
@@ -150,17 +188,18 @@ def get_filtered_data(request):
         'columns': list(columns_select["Parameters"].keys())
     })
 
-def dashboard_view(request):
-    df = generate_data()
-    return render(request, 'p_balance/dashboard.html', {
+def dashboard_view(request, dash_model):
+    df,columns_select = generate_data(dash_model)
+    return render(request, 'p_balance/dashboard_building.html', {
         'filters': json.dumps({col: sorted(df[col].unique()) for col in columns_select["Filter"]}),
         'models': sorted(df[columns_select["Model"]].unique()),
         'models_name': columns_select["Model"],
+        'dash_model': dash_model,
         'columns_select': json.dumps(columns_select),
         'color_classes': json.dumps(color_classes)
     })
 
-def get_color_for_value(parameter, value):
+def get_color_for_value(parameter, value, columns_select):
     """
     Determines the color for a given parameter value based on predefined thresholds.
     """

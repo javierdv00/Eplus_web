@@ -1,0 +1,35 @@
+{% extends "p_balance/dash_base.html" %}
+{% load static %}
+
+{% block dash_content %}
+<link rel="stylesheet" href="{% static 'dashboard/style_base.css' %}">
+
+<!-- P_balance image (not clickable) -->
+<div class="project-image">
+    <img src="{% static 'images/P_balance.png' %}" alt="Project Image">
+</div>
+
+<div class="home-nav-container">
+    
+    <!-- Navigation links with images -->
+    <div class="home-nav" id="home-nav">
+        <div class="nav-item">
+            <a href="#"><img src="{% static 'images/Clima.png' %}" alt="Clima"></a>
+            <p>Clima</p>
+        </div>
+        <div class="nav-item">
+            <a href="#"><img src="{% static 'images/Arquitetura.png' %}" alt="Arquitetura"></a>
+            <p>Arquitetura</p>
+        </div>
+        <div class="nav-item">
+            <a href="{% url 'dashboard_building' %}"><img src="{% static 'images/Edificio_Ava_Int.png' %}" alt="Analise Integrada Edifício"></a>
+            <p>Analise Integrada Edifício</p>
+        </div>
+        <div class="nav-item">
+            <a href="{% url 'dashboard_ambientes' %}"><img src="{% static 'images/Ambientes_Ava_Int.png' %}" alt="Analise Integrada Ambientes"></a>
+            <p>Analise Integrada Ambientes</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

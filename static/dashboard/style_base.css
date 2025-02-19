@@ -1,0 +1,119 @@
+/* Dashboard - Dash_Base */
+.dash-nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa; /* Light gray background */
+    padding: 10px;
+    border-radius: 8px;
+    margin: 10px auto;
+    max-width: 80%;
+    gap: 15px;
+}
+
+.nav-btn {
+    background-color: #007bff; /* Blue like Tableau */
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+.nav-btn:hover {
+    background-color: #0056b3;
+}
+
+.dash-nav {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+    -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
+}
+
+.dash-nav::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome/Safari */
+}
+
+.dash-link {
+    text-decoration: none;
+    padding: 8px 15px;
+    background-color: #e0e0e0;
+    color: black;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background 0.3s ease;
+}
+
+.dash-link:hover {
+    background-color: #d4d4d4;
+}
+
+/*-------------------------------------------------------------*/
+/* Dashboard - Home */
+/* Project image styling */
+.project-image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: 20px; /* Space from the top */
+}
+
+.project-image img {
+    max-width: 450px; /* Adjust as needed */
+    height: auto;
+    border-radius: 8px;
+}
+
+/* Navigator images container*/
+.home-nav-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Navigation container */
+.home-nav {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap; /* Allows items to wrap if needed */
+    gap: 30px; /* Space between items */
+    max-width: 80%; /* Prevents excessive stretching */
+    margin: 0 auto;
+}
+
+.nav-item {
+    text-align: center;
+    flex: 1; /* Ensures equal spacing */
+    min-width: 120px; /* Prevents items from being too small */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center text below image */
+}
+
+.nav-item img {
+    width: 100px; /* Fixed size */
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    transition: transform 0.3s ease-in-out;
+}
+
+.nav-item img:hover {
+    transform: scale(1.1);
+}
+
+.nav-item p {
+    margin-top: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    color: black;
+    word-wrap: break-word; /* Wraps long text */
+    text-align: center;
+    max-width: 100px; /* Prevents stretching */
+}

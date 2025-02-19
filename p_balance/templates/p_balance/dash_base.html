@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    {{ block.super }}
+
+    <link rel="stylesheet" href="{% static 'dashboard/style_base.css' %}">
+
+    <!-- Dash Navigation -->
+    <div class="dash-nav-container">
+        <button class="nav-btn" id="nav-prev">&lt;</button>
+        <div class="dash-nav" id="dashNav">
+            <a href="{% url 'dash_home' %}" class="dash-link">Capa</a>
+            <a href="#" class="dash-link">Clima</a>
+            <a href="#" class="dash-link">Arquitetura</a>
+            <a href="{% url 'dashboard_building' %}" class="dash-link">Analise Integrada Edifício</a>
+            <a href="{% url 'dashboard_ambientes' %}" class="dash-link">Analise Integrada Ambientes</a>
+        </div>
+        <button class="nav-btn" id="nav-next">&gt;</button>
+    </div>
+
+    {% block dash_content %}{% endblock %}
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const nav = document.getElementById("dashNav");
+            const prevBtn = document.getElementById("nav-prev");
+            const nextBtn = document.getElementById("nav-next");
+
+            let scrollAmount = 0;
+            const scrollStep = 100; // Adjust as needed
+
+            prevBtn.addEventListener("click", function () {
+                nav.scrollBy({ left: -scrollStep, behavior: "smooth" });
+            });
+
+            nextBtn.addEventListener("click", function () {
+                nav.scrollBy({ left: scrollStep, behavior: "smooth" });
+            });
+        });
+    </script>
+{% endblock %}

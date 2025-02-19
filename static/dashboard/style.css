@@ -1,3 +1,5 @@
+/* Dashboard - Analise Integrada Edifício */
+
 .container {
     display: flex;
     width: 100%;
@@ -71,15 +73,16 @@
 }
 
 #data-table-container {
-    margin-top: 20px;
+    margin-top: 10px;
     width: 100%;
     overflow-x: auto;
 }
 
 #data-table {
-    width: 1200px;
+    width: 1200px;      /* It not limite the table size but reduce the space of the columns when this line is here - do not delete*/
     border-collapse: collapse;
-    text-align: left;
+    text-align: center;
+    table-layout: fixed;
 }
 
 #data-table th, #data-table td {
@@ -91,33 +94,64 @@
     background-color: #f4f4f4;
 }
 
+#data-table td:first-child, 
+#data-table th:first-child {
+    width: 280px !important;
+    max-width: 280px;
+    min-width: 280px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+}
+
+/* Reduce font size in the first column of the body */
+#data-table tbody td:first-child {
+    font-size: 14px;  /* Default size */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Bold text in all other columns of the body */
+#data-table tbody td:not(:first-child) {
+    font-weight: bold;
+}
+
 #plotly-chart {
     width: 100%; /* Ensures it does not overflow */
     max-width: 100%; /* Prevents it from being wider than the parent */
     overflow-x: auto; /* Allows scrolling if needed */
 }
 
-/* color filter in table header*/
+/* Color filter in table header */
 .color-filter-container {
     display: flex;
     justify-content: center;
-    gap: 5px;
+    gap: 2px;
     margin-top: 5px;
 }
 
-.color-checkbox-label {
-    width: 20px;
-    height: 20px;
-    display: inline-block;
+/* Checkbox label (color box) */
+.color-filter-container label {
+    width: 20px;  /* Adjust size */
+    max-width: 20px;
+    min-width: 15px;
+    height: 25px;
+    display: flex;  /* Flex for centering */
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
     border-radius: 4px;
     border: 1px solid #ccc;
 }
 
-.color-checkbox-label input {
-    display: none;
+/* Hover effect */
+.color-filter-container label:hover {
+    opacity: 0.5;
 }
 
-.color-checkbox-label:hover {
-    opacity: 0.7;
+.color-filter-checkbox {
+    width: 12px;
+    height: 12px;
 }
