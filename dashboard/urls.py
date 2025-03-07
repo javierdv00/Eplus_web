@@ -1,7 +1,12 @@
 from django.urls import path
-from .views import dashboard_view, get_filtered_data
+from django.conf import settings
+from django.conf.urls.static import static
+from .views import upload_and_process
 
 urlpatterns = [
-    path('', dashboard_view, name='dashboard_2'),
-    path('get_filtered_data2/', get_filtered_data, name='get_filtered_data_2'),
+    path('', upload_and_process, name='upload_and_process'),
 ]
+
+# Serve media files in development mode
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

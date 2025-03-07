@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Data Manage</h2>
+
+<!-- File Upload -->
+<label>Select a file:</label>
+<input type="file" id="fileInput">
+<button onclick="uploadFile()">Upload</button>
+<p id="fileName"></p>
+
+<!-- Sheet Selection -->
+<div id="sheetSelection" style="display: none;">
+    <label>Select a sheet:</label>
+    <select id="sheetDropdown"></select>
+    <button onclick="selectSheet()">Load Sheet</button>
+</div>
+
+<!-- Column Selection -->
+<div id="columnSelection" style="display: none;">
+    <h3>Select Columns</h3>
+
+    <!-- Model Name Dropdown -->
+    <div class="model-section">
+        <label>Model Name Column:</label>
+        <select id="modelColumn"></select>
+    </div>
+
+    <!-- Filter Columns Multi-Select -->
+    <div class="filter-section">
+        <label>Filter Columns:</label>
+        <div id="filterSelect" class="multi-select">
+            <button type="button" onclick="toggleDropdown('filterDropdown')">Select Filters</button>
+            <div id="filterDropdown" class="dropdown-content"></div>
+        </div>
+        <div id="filterOptions"></div>
+    </div>
+
+    <!-- Parameter Columns Multi-Select -->
+    <div class="parameter-section">
+        <label>Parameter Columns:</label>
+        <div id="parameterSelect" class="multi-select">
+            <button type="button" onclick="toggleDropdown('parameterDropdown')">Select Parameters</button>
+            <div id="parameterDropdown" class="dropdown-content"></div>
+        </div>
+        <div id="parameterOptions"></div>
+    </div>
+
+    <!-- Save Button -->
+    <button onclick="saveData()">Save</button>
+</div>
+
+<!-- Add jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    function uploadFile() {
+        var fileInput = document.getElementById('fileInput').files[0];
+        var formData = new FormData();
+        formData.append('file', fileInput);
+
+        $.ajax({
+            url: '',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            success: function(response) {
+                $('#fileName').text("Selected File: " + fileInput.name);
+
+                if (response.sheets) {
+                    $('#sheetDropdown').empty();
+                    response.sheets.forEach(sheet => {
+                        $('#sheetDropdown').append(new Option(sheet, sheet));
+                    });
+                    $('#sheetSelection').show();
+                }
+            }
+        });
+    }
+
+    function selectSheet() {
+        var selectedSheet = $('#sheetDropdown').val();
+        
+        $.ajax({
+            url: '',
+            type: 'POST',
+            data: { 'selected_sheet': selectedSheet, 'csrfmiddlewaretoken': '{{ csrf_token }}' },
+            success: function(response) {
+                $('#modelColumn').empty();
+                $('#filterDropdown').empty();
+                $('#parameterDropdown').empty();
+
+                response.columns.forEach(col => {
+                    $('#modelColumn').append(new Option(col, col));
+                    $('#filterDropdown').append(`<label><input type="checkbox" value="${col}" onchange="updateFilters()"> ${col}</label>`);
+                    $('#parameterDropdown').append(`<label><input type="checkbox" value="${col}" onchange="updateParameters()"> ${col}</label>`);
+                });
+
+                $('#columnSelection').show();
+            }
+        });
+    }
+
+    function toggleDropdown(dropdownId) {
+        $('.dropdown-content').not('#' + dropdownId).hide(); // Close other dropdowns
+        $('#' + dropdownId).toggle();
+    }
+
+    // Close dropdowns when clicking outside
+    $(document).click(function(event) {
+        if (!$(event.target).closest('.multi-select').length) {
+            $('.dropdown-content').hide();
+        }
+    });
+
+    function updateFilters() {
+        var selectedFilters = $('#filterDropdown input:checked').map(function() { return this.value; }).get();
+        $('#filterOptions').empty();
+
+        selectedFilters.forEach(filter => {
+            $('#filterOptions').append(`
+                <div>
+                    <label>${filter} (Rename:)</label>
+                    <input type="text" name="rename_${filter}" placeholder="New name for ${filter}">
+                </div>
+            `);
+        });
+    }
+
+    function updateParameters() {
+        var selectedParams = $('#parameterDropdown input:checked').map(function() { return this.value; }).get();
+        $('#parameterOptions').empty();
+
+        selectedParams.forEach(param => {
+            $('#parameterOptions').append(`
+                <div>
+                    <label>${param} (Rename:)</label>
+                    <input type="text" name="rename_${param}" placeholder="New name for ${param}">
+                    
+                    <label>Limits:</label>
+                    <input type="number" name="base_${param}" placeholder="Base">
+                    <input type="number" name="limit1_${param}" placeholder="Limit 1">
+                    <input type="number" name="limit2_${param}" placeholder="Limit 2">
+                    <input type="number" name="limit3_${param}" placeholder="Limit 3">
+                    <input type="number" name="limit4_${param}" placeholder="Limit 4">
+                    <input type="number" name="limit5_${param}" placeholder="Limit 5">
+                    
+                    <label>Direction:</label>
+                    <input type="checkbox" name="updown_${param}"> Up/Down
+                </div>
+            `);
+        });
+    }
+
+    function saveData() {
+        var selectedModel = $('#modelColumn').val();
+        var selectedFilters = $('#filterDropdown input:checked').map(function() { return this.value; }).get();
+        var selectedParams = $('#parameterDropdown input:checked').map(function() { return this.value; }).get();
+        
+        var renameFilters = {};
+        $('#filterOptions input').each(function() {
+            renameFilters[$(this).attr('name').replace('rename_', '')] = $(this).val();
+        });
+
+        var renameParams = {};
+        var limits = {};
+        var updown = {};
+
+        $('#parameterOptions div').each(function() {
+            var param = $(this).find('input[type="text"]').attr('name').replace('rename_', '');
+            renameParams[param] = $(this).find('input[type="text"]').val();
+
+            limits[param] = [
+                $(this).find('input[name="limit1_' + param + '"]').val(),
+                $(this).find('input[name="limit2_' + param + '"]').val(),
+                $(this).find('input[name="limit3_' + param + '"]').val(),
+                $(this).find('input[name="limit4_' + param + '"]').val(),
+                $(this).find('input[name="limit5_' + param + '"]').val(),
+            ];
+
+            updown[param] = $(this).find('input[type="checkbox"]').prop('checked');
+        });
+
+        $.ajax({
+            url: '',
+            type: 'POST',
+            data: {
+                'selected_model': selectedModel,
+                'selected_filters': JSON.stringify(selectedFilters),
+                'rename_filters': JSON.stringify(renameFilters),
+                'selected_params': JSON.stringify(selectedParams),
+                'rename_params': JSON.stringify(renameParams),
+                'limits': JSON.stringify(limits),
+                'updown': JSON.stringify(updown),
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                alert('Data saved successfully!');
+            }
+        });
+    }
+</script>
+
+<style>
+    /* Model Name Column Select Box - Update Width Here */
+    #modelColumn {
+        width: 150px; /* Change this value as needed */
+        height: 20px; /* Change height if needed */
+    }
+
+    /* Filter & Parameter Select Buttons - Update Width & Height Here */
+    .multi-select button {
+        width: 150px; /* Change this value as needed */
+        height: 25px; /* Change height if needed */
+        font-size: 14px; /* Adjust text size if needed */
+    }
+
+    /* Padding for Model Name Column */
+    .model-section {
+        padding: 10px 0; /* Adjust vertical padding */
+    }
+
+    /* Padding before Filter Columns */
+    .filter-section {
+        padding-top: 20px; /* Adjust spacing */
+    }
+
+    /* Padding before Parameter Columns */
+    .parameter-section {
+        padding-top: 40px; /* Adjust spacing */
+    }
+
+    .multi-select {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 10px;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: white;
+        border: 1px solid #ddd;
+        max-height: 150px;
+        overflow-y: auto;
+        width: 150px; /* Match button width */
+        padding: 5px;
+    }
+
+    .dropdown-content label {
+        display: block;
+        padding: 8px; /* Space between options */
+        cursor: pointer;
+    }
+
+    .dropdown-content label:hover {
+        background-color: #f0f0f0;
+    }
+
+    /* Parameter Table Layout */
+    #parameterOptions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px; /* Adjust spacing between rows */
+    }
+    
+    /* Static width for first column in parameter options */
+    .parameter-row {
+        display: flex;
+        align-items: center;
+        gap: 10px; /* Space between columns */
+        width: 100%; /* Make sure row takes full width */
+    }
+
+    .parameter-name {
+        width: 450px; /* Static width for name column */
+        min-width: 450px; /* Ensures the name column does not shrink */
+        flex-shrink: 0; /* Prevents the name from shrinking */
+        font-weight: bold;
+    }
+    .parameter-row input {
+        width: 80px; /* Adjust width of input fields */
+        text-align: center;
+    }
+</style>
+
+{% endblock %}
+
+<!--
+
+update the style to change the filterOptions and parameterOptions be dispay as a table format so i can give to each column a name.
+1.  for filter: the selected name calll it Filter and the second coĺumns call it rename (so it will be like this: |Filter    | Rename   |)
+2.  for parameter: the selected name calll it Parameter and the second coĺumns call it rename, the limit call it limit 1, 2 ... until 5 and the last column call reverse direction
+(so it will be like this: |Parameter    | Rename   | limit 1 | limit 2 | limit 3 | limit 4 | limit 5 | Reverse direction |)
+
+I want to change the horizontal size of each columns with difference values 
+
+-->

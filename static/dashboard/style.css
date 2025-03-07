@@ -72,13 +72,20 @@
     margin-right: 0;        /* Remove right margin for checkboxes */
 }
 
-#data-table-container {
+#data-container {
     margin-top: 10px;
     width: 100%;
+    max-width: 100%;
+    min-width: 100%;
     overflow-x: auto;
 }
 
+#plotly-chart {
+    width: 100%; /* Ensures it does not overflow */
+}
+
 #data-table {
+    width: 100%; /* Ensures it does not overflow */
     width: 1200px;      /* It not limite the table size but reduce the space of the columns when this line is here - do not delete*/
     border-collapse: collapse;
     text-align: center;
@@ -116,12 +123,6 @@
 /* Bold text in all other columns of the body */
 #data-table tbody td:not(:first-child) {
     font-weight: bold;
-}
-
-#plotly-chart {
-    width: 100%; /* Ensures it does not overflow */
-    max-width: 100%; /* Prevents it from being wider than the parent */
-    overflow-x: auto; /* Allows scrolling if needed */
 }
 
 /* Color filter in table header */
